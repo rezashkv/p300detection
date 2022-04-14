@@ -2,7 +2,7 @@ import numpy as np
 from scipy.io import loadmat
 from p300detection.preprocessing.filters import reduce_noise
 
-dataset = loadmat('../../Project/preprocessing/Subject_A_Train.mat')
+dataset = loadmat('../Data/preprocessing/Subject_A_Train.mat')
 raw_signal = np.transpose(dataset['Signal'], (0, 2, 1))
 stimulus_type = dataset['StimulusType'].astype(int)
 stimulus_code = dataset['StimulusCode'].astype(int)
