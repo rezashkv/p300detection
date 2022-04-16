@@ -1,0 +1,62 @@
+import scipy.io
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+import hdf5storage
+
+Data_ts = hdf5storage.loadmat('Test_A')
+
+X_test = np.array(Data_ts['Epoch_test_A'])
+event = np.array(Data_ts['event'])
+test_str_A = 'WQXPLZCOMRKO97YFZDEZ1DPI9NNVGRQDJCUVRMEUOOOJD2UFYPOO6J7LDGYEGOA5VHNEHBTXOO1TDOILUEE5BFAEEXAW_K4R3MRU';
+
+X_train_PCA = np.loadtxt('X_train_A_pca.npy')
+Y_train = np.loadtxt('y_train.npy')
+X_test_PCA = np.loadtxt('X_test_A_pca.npy')
+
+LDAmodel = LinearDiscriminantAnalysis()
+LDAmodel.fit(X_train_PCA, Y_train)
+
+Prediction = LDAmodel.predict_proba(X_test_PCA)
+
+Score_pos = Prediction[:, 1]
+
+N_character = int(len(Score_pos) / 180)
+
+mean_scor = np.zeros((12 * N_character, 1))
+
+for i in range(N_character):
+    for j in range(12):
+        c = np.where(event[i, :] == j + 1)
+        c = np.array(list(c))
+        mean_scor[i * 12 + (j), 0] = np.mean(Score_pos[180 * i + c])
+
+N_row_col = int(len(mean_scor) / 6)
+
+ind = np.zeros((N_row_col, 1))
+for k in range(N_row_col):
+    ind[k, 0] = np.argmax(mean_scor[(k * 6):(k + 1) * 6])
+
+screen_char = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_')
+
+row_col = [];
+col = [];
+row = [];
+L = len(ind)
+col = ind[range(0, L, 2)]
+row = ind[range(1, L, 2)]
+row_col = (col) + (row) * 6
+
+target_predict = [];
+
+for i in range(len(row_col)):
+    target_predict.append(screen_char[int(row_col[i])])
+
+target_real = test_str_A;  # %train_str_A ; train_str_B  ;  test_str_A  ; test_str_B
+
+c = 0
+for i in range(len(target_predict)):
+
+    if target_real[i] == target_predict[i]:
+        c = c + 1
+print('acc_test: ' + str(c / len(target_predict)))
